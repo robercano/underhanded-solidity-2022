@@ -1013,7 +1013,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
       ]],\
       ["@openzeppelin/contracts", [\
         ["npm:4.5.0", {\
-          "packageLocation": "./.yarn/cache/@openzeppelin-contracts-npm-4.5.0-c6f6b2c463-1c9c5dff04.zip/node_modules/@openzeppelin/contracts/",\
+          "packageLocation": "./.yarn/unplugged/@openzeppelin-contracts-npm-4.5.0-c6f6b2c463/node_modules/@openzeppelin/contracts/",\
           "packageDependencies": [\
             ["@openzeppelin/contracts", "npm:4.5.0"]\
           ],\

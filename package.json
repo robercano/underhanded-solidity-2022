@@ -85,5 +85,10 @@
     },
     "lint-staged": {
         "*.{js,json,md,sol,ts}": "yarn prettier"
+    },
+    "dependenciesMeta": {
+        "@openzeppelin/contracts@4.5.0": {
+            "unplugged": true
+        }
     }
 }
