@@ -46,7 +46,7 @@ export async function deploy(
     //
     // if ((flags & DeploymentFlags.Deploy) === DeploymentFlags.Deploy) {
     const contractFactory = await ethers.getContractFactory(contractName);
-    contract = await contractFactory.deploy(args);
+    contract = await contractFactory.deploy(...args);
     //}
 
     if ((flags & DeploymentFlags.Verify) === DeploymentFlags.Verify) {

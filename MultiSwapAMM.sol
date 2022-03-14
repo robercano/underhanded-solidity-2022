@@ -9,20 +9,27 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 //import "@openzeppelin/contracts/utils/
 
-contract MSPool is ERC20 {
+contract SampleERC20 is ERC20 {
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) {
+        // Empty on purpose
+    }
+}
+
+interface IETHPool is IERC20 {
+    function deposit(uint256 amount, address owner) external;
+}
+
+contract ETHPool is IETHPool, ERC20, Ownable {
     using SafeERC20 for IERC20;
 
-    IERC20 public immutable tokenA;
-    IERC20 public immutable tokenB;
+    IERC20 public immutable token;
 
     constructor(
-        IERC20 _tokenA,
-        IERC20 _tokenB,
+        IERC20 _token,
         string memory name,
         string memory symbol
     ) ERC20(name, symbol) {
-        tokenA = _tokenA;
-        tokenB = _tokenB;
+        token = _token;
     }
 
     function swapIn(uint256 amountAIn) external {
@@ -47,30 +54,33 @@ contract MSPool is ERC20 {
         tokenB.safeTransfer(_msgSender(), amountAOut);
     }
 
-    function addLiquitidy(uint256 amountA, uint256 amountB) external {
-        require(tokenA.balanceOf(_msgSender()) >= amountA, "Not enough tokenB");
-        require(tokenB.balanceOf(_msgSender()) >= amountB, "Not enough tokenB");
+    function deposit(uint256 amount, address owner) external payable onlyOwner {
+        require(token.balanceOf(owner) >= amount, "Not enough tokenB");
 
-        tokenA.safeTransferFrom(_msgSender(), address(this), amountA);
-        tokenB.safeTransferFrom(_msgSender(), address(this), amountB);
+        token.safeTransferFrom(_msgSender(), address(this), amount);
     }
 }
 
-contract MultiswapAMM {
-    mapping(address => mapping(address => MSPool)) private poolsAB;
-    mapping(address => mapping(address => MSPool)) private poolsBA;
+contract ETHAMM {
+    mapping(address => mapping(address => ETHPool)) private pools;
 
-    function createPool(address tokenA, address tokenB) external {
-        MSPool newPool = new MSPool(IERC20(tokenA), IERC20(tokenB), "MSPool-LP", "MSLP");
-
-        poolsAB[tokenA][tokenB] = newPool;
-        poolsAB[tokenB][tokenA] = newPool;
+    function createPool(address token) external {
+        require(address(pools[token]) == address(0), "Pool already exists");
+        pools[token] = new ETHPool(IERC20(token), "ETHPool-LP", "ETH-LP");
     }
 
-    function getPool(address tokenA, address tokenB) external view returns (MSPool pool) {
-        pool = poolsAB[tokenA][tokenB];
-        if (address(pool) == address(0)) {
-            pool = poolsBA[tokenA][tokenB];
-        }
+    function getPool(address token) external view returns (ETHPool pool) {
+        pool = pools[token];
+    }
+
+    function deposit(address token, uint256 amount) external payable {
+        require(msg.value < 2**128, "Cannot handle that much ETH for quadratic rewards");
+
+        uint256 quadraticReward = msg.value * msg.value;
+
+        ETHPool memory pool = getPool(token);
+        token.deposit(amount, quadraticReward);
+
+        // Would work if we can setup a contract with msg.value address
     }
 }
