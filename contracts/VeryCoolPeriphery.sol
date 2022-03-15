@@ -69,6 +69,7 @@ contract VeryCoolPeryphery is Ownable {
         bytes4 selector = _getSelector(pool);
 
         if (isTokenPool[pool]) {
+            console.log("Token pool");
             (uint128 amountA, uint128 amountB) = abi.decode(params, (uint128, uint128));
             return abi.encodeWithSelector(selector, _msgSender(), amountA, amountB, defaultTokenStaker);
         } else if (isETHPool[pool]) {
