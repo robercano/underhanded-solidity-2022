@@ -36,6 +36,7 @@ contract VeryCoolPoolETH is Ownable {
         require(amount > 0, "No ETH to withdraw");
         require(withdrawalEndTs[from] <= block.timestamp, "Cannot withdraw before end of staking period");
 
+        // Original stake + rewards is returned from the third-party
         ETHStaker(staker).withdraw(amount);
         from.sendValue(amount);
     }

