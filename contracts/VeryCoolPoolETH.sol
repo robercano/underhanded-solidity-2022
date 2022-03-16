@@ -1,19 +1,24 @@
 //SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-import "./ThirdPartyETHStaker.sol";
+interface ThirdPartyETHPool {
+    function stake() external payable;
+
+    function withdraw(uint256 amount) external;
+}
 
 contract VeryCoolPoolETH is Ownable {
     using Address for address payable;
 
     mapping(address => uint256) public balanceOf;
     mapping(address => uint256) public withdrawalEndTs;
+
+    function getEncodedData(bool longStake) external pure returns (bytes memory) {
+        return abi.encode(longStake);
+    }
 
     function deposit(
         address from,
@@ -26,8 +31,7 @@ contract VeryCoolPoolETH is Ownable {
         balanceOf[from] += msg.value;
         withdrawalEndTs[from] = endTimestamp;
 
-        console.log("Deposit of ETH - from: %s, endTimestamp: %s, staker: %s", from, endTimestamp, staker);
-        ETHStaker(staker).stake{ value: msg.value }();
+        ThirdPartyETHPool(staker).stake{ value: msg.value }();
     }
 
     function withdraw(address payable from, address staker) external onlyOwner {
@@ -37,7 +41,7 @@ contract VeryCoolPoolETH is Ownable {
         require(withdrawalEndTs[from] <= block.timestamp, "Cannot withdraw before end of staking period");
 
         // Original stake + rewards is returned from the third-party
-        ETHStaker(staker).withdraw(amount);
+        ThirdPartyETHPool(staker).withdraw(amount);
         from.sendValue(amount);
     }
 }

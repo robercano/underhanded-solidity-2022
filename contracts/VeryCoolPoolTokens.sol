@@ -1,19 +1,31 @@
 //SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract VeryCoolPoolTokens is Ownable {
+interface TokenStaker {
+    function stake(address token, uint256 amount) external;
+
+    function withdraw(address token, uint256 amount) external;
+}
+
+// Standard Liquidity Pool ala Uniswap plus Staking on Third Party. Only important logic
+// is shown:
+//   - Users staking and getting LP tokens will receive fees back
+//   - Third party also generates rewards on LP tokens
+//
+contract VeryCoolPoolTokens is ERC20Burnable, Ownable {
+    using SafeERC20 for IERC20;
+
     IERC20 public tokenA;
     IERC20 public tokenB;
+
     mapping(address => uint256) public balanceOfA;
     mapping(address => uint256) public balanceOfB;
 
-    constructor(address _tokenA, address _tokenB) {
+    constructor(address _tokenA, address _tokenB) ERC20("VeryCoolLP", "VCLP") {
         tokenA = IERC20(_tokenA);
         tokenB = IERC20(_tokenB);
     }
@@ -27,13 +39,35 @@ contract VeryCoolPoolTokens is Ownable {
         uint128 amountA,
         uint128 amountB,
         address staker
-    ) external {
-        // Here safeTransferFrom for amountA and amountB is called and LP tokens added to Staker
-        console.log("Deposit of LP Tokens - from: %s, amountA: %s, amountB: %s", from, amountA, amountB);
-        console.log("Staker: %s", staker);
+    ) external onlyOwner {
+        balanceOfA[from] += amountA;
+        balanceOfB[from] += amountB;
+
+        // Very simple LP generation!
+        uint256 lpAmount = amountA + amountB;
+        _mint(address(this), amountA + amountB);
+        _approve(address(this), staker, lpAmount);
+
+        tokenA.safeTransferFrom(from, address(this), amountA);
+        tokenB.safeTransferFrom(from, address(this), amountB);
+
+        TokenStaker(staker).stake(address(this), lpAmount);
     }
 
-    function withdraw(address from, address staker) external onlyOwner {
-        // Here LP tokens are withdrawn from staker and tokens returned to 'from'
+    function withdraw(
+        address from,
+        uint256 amount,
+        address staker
+    ) external onlyOwner {
+        require(amount <= balanceOf(from), "Not enough LP tokens");
+        TokenStaker(staker).withdraw(address(this), amount);
+
+        _burn(from, amount);
+
+        uint256 amountA = balanceOfA[from];
+        uint256 amountB = balanceOfB[from];
+
+        tokenA.safeTransfer(from, amountA);
+        tokenB.safeTransfer(from, amountB);
     }
 }

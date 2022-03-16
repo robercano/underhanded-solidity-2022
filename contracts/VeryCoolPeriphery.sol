@@ -1,8 +1,6 @@
 //SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
@@ -12,17 +10,24 @@ import "./VeryCoolPoolETH.sol";
 contract VeryCoolPeryphery is Ownable {
     using Address for address;
 
-    uint256 public constant MIN_STAKING_TIME = 10 days;
+    uint256 public constant SHORT_STAKING_TIME = 10 days;
+    uint256 public constant LONG_STAKING_TIME = 40 days;
 
     mapping(address => bool) public isETHPool;
     mapping(address => bool) public isTokenPool;
 
-    address public defaultETHStaker;
+    address public defaultShortETHStaker;
+    address public defaultLongETHStaker;
     address public defaultTokenStaker;
     VeryCoolPoolETH public defaultETHPool;
 
-    constructor(address ethStaker, address tokenStaker) {
-        defaultETHStaker = ethStaker;
+    constructor(
+        address shortEthStaker,
+        address longEthStaker,
+        address tokenStaker
+    ) {
+        defaultShortETHStaker = shortEthStaker;
+        defaultLongETHStaker = longEthStaker;
         defaultTokenStaker = tokenStaker;
 
         defaultETHPool = new VeryCoolPoolETH();
@@ -57,9 +62,9 @@ contract VeryCoolPeryphery is Ownable {
 
     function _getSelector(address pool) internal view returns (bytes4) {
         if (isETHPool[pool]) {
-            return bytes4(keccak256(bytes("deposit(address,uint256,address)")));
+            return VeryCoolPoolETH.deposit.selector;
         } else if (isTokenPool[pool]) {
-            return bytes4(keccak256(bytes("deposit(address,uint128,uint128,address)")));
+            return VeryCoolPoolTokens.deposit.selector;
         } else {
             revert("Unknown pool");
         }
@@ -72,7 +77,15 @@ contract VeryCoolPeryphery is Ownable {
             (uint128 amountA, uint128 amountB) = abi.decode(params, (uint128, uint128));
             return abi.encodeWithSelector(selector, _msgSender(), amountA, amountB, defaultTokenStaker);
         } else if (isETHPool[pool]) {
-            return abi.encodeWithSelector(selector, _msgSender(), block.timestamp + MIN_STAKING_TIME, defaultETHStaker);
+            bool longStake = abi.decode(params, (bool));
+
+            uint256 endTimestamp = longStake
+                ? (block.timestamp + LONG_STAKING_TIME)
+                : (block.timestamp + SHORT_STAKING_TIME);
+
+            address staker = longStake ? defaultLongETHStaker : defaultShortETHStaker;
+
+            return abi.encodeWithSelector(selector, _msgSender(), endTimestamp, staker);
         } else {
             revert("Unknown pool");
         }
