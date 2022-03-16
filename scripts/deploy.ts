@@ -13,11 +13,7 @@ async function main() {
     // Deploy AMM
     const VeryCoolPeryphery: VeryCoolPeryphery = (await deploy(
         "VeryCoolPeryphery",
-        [
-            "0x596b40b23aEdda314AfD810a76bC97B18e2A084E",
-            "0xe5Fe0148D91567591EC859cBb2F8bC03803Bfc7d",
-            "0x00000000e82eb0431756271F0d00CFB143685e7B",
-        ],
+        ["0x596b40b23aEdda314AfD810a76bC97B18e2A084E", "0xe5Fe0148D91567591EC859cBb2F8bC03803Bfc7d"],
         DeploymentFlags.Deploy,
     )) as VeryCoolPeryphery;
     console.log(`VeryCoolPeryphery deployed at ${VeryCoolPeryphery.address}`);
