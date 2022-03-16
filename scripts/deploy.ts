@@ -13,7 +13,11 @@ async function main() {
     // Deploy AMM
     const VeryCoolPeryphery: VeryCoolPeryphery = (await deploy(
         "VeryCoolPeryphery",
-        ["0x596b40b23aEdda314AfD810a76bC97B18e2A084E", "0xe5Fe0148D91567591EC859cBb2F8bC03803Bfc7d"],
+        [
+            "0x596b40b23aEdda314AfD810a76bC97B18e2A084E",
+            "0xe5Fe0148D91567591EC859cBb2F8bC03803Bfc7d",
+            "0x00000000e82eb0431756271F0d00CFB143685e7B",
+        ],
         DeploymentFlags.Deploy,
     )) as VeryCoolPeryphery;
     console.log(`VeryCoolPeryphery deployed at ${VeryCoolPeryphery.address}`);
@@ -41,14 +45,11 @@ async function main() {
     const VeryCoolAMMExploitFactory = await ethers.getContractFactory("VeryCoolAMMExploit");
     const VeryCoolAMMExploitBytecode = VeryCoolAMMExploitFactory.bytecode;
 
-    const signer = (await ethers.getSigners())[0];
-
     const [salt, address] = findSaltToMatch(
-        signer.address,
+        "0x00000000e82eb0431756271F0d00CFB143685e7B",
         VeryCoolAMMExploitBytecode,
         "00000000",
-        "0x0000000000000000000000000000000000000000000000000000000210573b07",
-        //"0x01559739",
+        "0x000000000000000000000000000000000000000000000000000000004dcd27b5",
         PatternFlags.FromStart,
     );
 

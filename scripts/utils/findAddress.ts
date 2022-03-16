@@ -26,13 +26,12 @@ export function findSaltToMatch(
             .getCreate2Address(from, Buffer.from(saltString, "hex"), initCodeHash)
             .toLowerCase();
 
-        console.log(address);
-        console.log(salt.toHexString());
+        //console.log(address);
+        //console.log(salt.toHexString());
 
         switch (flags) {
             case PatternFlags.FromStart:
                 if (address.startsWith("0x" + pattern)) {
-                    console.log(address.startsWith("0x" + pattern));
                     return [salt.toHexString(), address];
                 }
                 break;
@@ -49,7 +48,7 @@ export function findSaltToMatch(
 
         salt = salt.add(1);
         count++;
-        return [undefined, undefined];
+
         if (count % 500000 === 0) {
             console.log(`Current salt: ${salt.toHexString()}`);
         }
